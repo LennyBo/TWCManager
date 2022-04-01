@@ -2430,7 +2430,7 @@ timeLastkWhSaved = time.time()
 # TWCManagerSettings.txt. This gives us a path that will always locate
 # TWCManagerSettings.txt in the same directory as the script even when pwd does
 # not match the script directory.
-settingsFileName = r'/home/pi/TWC/TWCManagerSettings.txt'
+settingsFileName = r'/home/pi/TWCManager/TWC/settings.txt'
 print(f"{__file__}\t{settingsFileName}")
 nonScheduledAmpsMax = -1
 timeLastHeartbeatDebugOutput = 0

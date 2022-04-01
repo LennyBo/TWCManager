@@ -26,14 +26,21 @@ sudo nano TWC/TWCManager.py
 ```
 
 Here, change wiringMaxMapsAllTWCs and wiringMaxAmpsPerTWC to suit your installation.
+Make sure you go thourgh all the settings in the TWC/TWCManager.py file and understand what you are doing.
 
 Next step is to start the script on boot in case of power outages. I assume that you cloned inside /home/pi
-If that is not the case, make sure to change the commands
+If that is not the case, make sure to change the commands accordingly.
 
 Open /etc/rc.local and add this command before the exit 0
+
 ```
-~/TWCManager/TWC/launch.sh
+cd /home/pi/TWCManager/TWC
+su pi -c "screen -m -d -L -Logfile TWCManager.log -S TWCManager python3 /home/pi/TWCManager/TWC/TWCManager.py"
+cd -
 ```
+
+These commands will make sure the script is running on boot, on a detached screen, logging to TWC/TWCManager.log and with the user pi.
+
 Now we also have to make that script execuable and reboot to test
 
 ```
@@ -41,3 +48,28 @@ chmod +x TWC/launch.sh
 sudo reboot
 ```
 
+If everything went well, you should see a screen with the TWCManager running inside it using this command:
+```
+screen -r TWCManager
+```
+(to detach from the screen, type ctrl+a d)
+
+If something is wrong, you should have a log file called TWC/TWCManager.log
+
+# Installing the webserver
+
+```
+sudo apt-get install -y lighttpd
+sudo apt-get install -y php7.0-cgi
+sudo lighty-enable-mod fastcgi-php
+sudo service lighttpd force-reload
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 775 /var/www/html
+sudo usermod -a -G www-data pi
+cp ~/TWCManager/HTML/* /var/www/html/
+sudo reboot
+```
+
+Now the webinterface should be accessible through http://<your_ip_address>/
+
+![Interface](Doc/LightInterface.PNG)
