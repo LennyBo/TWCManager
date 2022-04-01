@@ -402,3 +402,23 @@ Les valeur current available anisi que le pulling sont misses a jour toutes les 
 
 
 # Installation
+
+J'ai écrit le guide d'installation dans le fichier README.md du repo git a fin que d'autre personne puissent reprendre mon travail s'il le souhaite.
+
+J'ai rencontré beacoup de problème pour le faire au propre.
+Premierement, quand l'os démarre, on peut ajouter des commandes dans le /etc/rc.local. Mais ce fichier est executé en tant que root. Ce qui fait que pleine de chose marchais si je lancais les commandes a la main mais quand je rebootais, les screens n'etais pas lancés, les logfile pas existant ou au mauvais entroid etc.
+
+Pour palier a ce problème il faut utiliser:
+
+```
+su pi -c "<command>"
+```
+
+Mais dans ce cas, les fichiers de logs ou autre fichier de config ne seront pas dans les bons dossiers.
+Donc il faut ajouter un cd avent de lancer la commande donc on aurait:
+
+```
+cd /home/pi/TWCManager/TWC
+su pi -c "screen -m -d -L -Logfile TWCManager.log -S TWCManager python3 /home/pi/TWCManager/TWC/TWCManager.py"
+cd -
+```

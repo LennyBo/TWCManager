@@ -11,11 +11,59 @@ Instead, it is possible to use a protocol called modbus. To activate modbus foll
 The inverter needs to be connected through an ethernet cable (a firmware update disabled modbus over WiFi)
 
 # Installation
-For the RS485 connection, follow the pdf installation guide until Install TWCManager.
+
+# Hardware installation
+
+For the hardware instllation, since I am now an expert in the field, please follow the ````TWCManager Instllation.pdf```` file.
+
+# Software installation
+
+First install a Rasbian OS onto your PI Zero W with an ssh server.
+
+With ```raspi-config``` you can enable ssh and set the port to 22.
+Also make sure to do the basic configuration like setting the timezone and localistaion options.
+Go to Advanced Options then Expand Filesystem
+Type Tab to finish.
+
+Then, change the default password.
+This is important as your raspberry will controll part of your electricity network and that is a security risk.
+
+```
+passwd
+```
+
+## Wireless
+
+```
+sudo cat nano /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+Here, add the following lines:
+network={
+        ssid="<SSID>"
+        psk="<Password>"
+}
+
+then restart your network interfaces
+```
+sudo ifdown wlan0; sudo ifup wlan0
+ping 8.8.8.8
+```
+
+Your connection should now be working.
+
+Next step is to set a static ip.
+For me, the simplest way is to use a static DHCP lease through my router.
+You could also set a static ip with config files.
+
+After a reboot, connect with ssh to your pi and from now on, no screen is needed.
+
+## Software installation and configuration
 
 First step is to install some packages:
 
 ```
+sudo apt-get update;sudo apt-get upgrade
 sudo apt-get install -y screen
 sudo apt-get install -y git
 sudo apt-get install python3-pip
@@ -25,7 +73,7 @@ sudo pip3 install -r requirements.txt
 sudo nano TWC/TWCManager.py
 ```
 
-Here, change wiringMaxMapsAllTWCs and wiringMaxAmpsPerTWC to suit your installation.
+Here, change wiringMaxMapsAllTWCs and wiringMaxAmpsPerTWC to suite your installation.
 Make sure you go thourgh all the settings in the TWC/TWCManager.py file and understand what you are doing.
 
 Next step is to start the script on boot in case of power outages. I assume that you cloned inside /home/pi
@@ -34,6 +82,7 @@ If that is not the case, make sure to change the commands accordingly.
 Open /etc/rc.local and add this command before the exit 0
 
 ```
+/usr/bin/tvservice -o # Disables HDMI output
 cd /home/pi/TWCManager/TWC
 su pi -c "screen -m -d -L -Logfile TWCManager.log -S TWCManager python3 /home/pi/TWCManager/TWC/TWCManager.py"
 cd -
@@ -41,12 +90,6 @@ cd -
 
 These commands will make sure the script is running on boot, on a detached screen, logging to TWC/TWCManager.log and with the user pi.
 
-Now we also have to make that script execuable and reboot to test
-
-```
-chmod +x TWC/launch.sh
-sudo reboot
-```
 
 If everything went well, you should see a screen with the TWCManager running inside it using this command:
 ```
@@ -55,6 +98,23 @@ screen -r TWCManager
 (to detach from the screen, type ctrl+a d)
 
 If something is wrong, you should have a log file called TWC/TWCManager.log
+
+## Going low power
+In this section, we disable everything that is not needed to save power.
+
+```
+sudo nano /boot/config.txt
+```
+Add the following lines at the end of the file
+
+```
+dtparam=audio=off
+# Disable the activity LED on the Pi Zero.
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=on
+# Disable bluetooth
+dtoverlay=pi3-miniuart-bt
+```
 
 # Installing the webserver
 
@@ -73,3 +133,11 @@ sudo reboot
 Now the webinterface should be accessible through http://<your_ip_address>/
 
 ![Interface](Doc/LightInterface.PNG)
+
+You might need to change a settings in ````/var/www/html/TWCApi.php````.
+There is a var called ```$twcScriptDir = "/home/pi/TWCxHomeAssistant/TWC/";``` which you need to your own path.
+
+
+If there are any troubles, open a issue on the repo and I'll get back to you.
+
+Best of luck!
