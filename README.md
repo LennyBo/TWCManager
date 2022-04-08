@@ -14,7 +14,7 @@ The inverter needs to be connected through an ethernet cable (a firmware update 
 
 # Hardware installation
 
-For the hardware instllation, since I am now an expert in the field, please follow the ````TWCManager Instllation.pdf```` file.
+For the hardware instllation, since I am not an expert in the field, please follow the ````TWCManager Instllation.pdf```` file.
 
 # Software installation
 
@@ -130,12 +130,16 @@ cp ~/TWCManager/HTML/* /var/www/html/
 sudo reboot
 ```
 
+You need to change a settings in ````/var/www/html/TWCApi.php````.
+There is a var called which you need to your own path.
+```
+$twcScriptDir = "/home/pi/TWCxHomeAssistant/TWC/"; //Change that to the locaiton of your TPWManager.py script
+$url = "http://192.168.0.221";  //Change that to the url to the index.html
+```
+
 Now the webinterface should be accessible through http://<your_ip_address>/
 
 ![Interface](Doc/LightInterface.PNG)
-
-You might need to change a settings in ````/var/www/html/TWCApi.php````.
-There is a var called ```$twcScriptDir = "/home/pi/TWCxHomeAssistant/TWC/";``` which you need to your own path.
 
 
 If there are any troubles, open a issue on the repo and I'll get back to you.

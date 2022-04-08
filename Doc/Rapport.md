@@ -21,6 +21,7 @@ Il faut que je trouve exacement les commandes qui active le track green energy.
 En même temps, la façon don't j'allais chercher la production de l'installation PV n'est plus possible. Jusqu'a maintenant, HomeAssistant utilisait un protocol appelé ModBus qui va intéroger l'onduleur.
 
 Je vais ecrire un program python qui va faire tout cela et rendre le programme accessible depuis la ligne de commande.
+Cette solution est beacoup mieux car elle evite le cas ou HomeAssistant crash/est down.
 A partir de la, je pourrais regarder si je peut appeler cette commande depuis le backend et puis mettre a jour le front end.
 
 Il y a une librarie qui es fait pour modbus
@@ -32,6 +33,7 @@ pip install solaredge_modbus
 Je me souvien pas de l'ip de l'onduleur donc j'ai passé 2 heures a faire des manipulations. Il y a une application android qui permet de configurer l'onduleur. Elle ne permet pas d'afficher l'ip donc j'ai du aller sur le routeur voir les appareils connecté et trouver l'adresse mac qui a un constructeur SolarEdge. Ducoup c'est l'ip 192.168.0.26. J'ai dit au routeur de lui la reserver afin qu'elle ne change plus.
 
 Maintenant je devrais pouvoir me connecter sur le modbus a l'aide de la librairie.
+
 ![](smbConnectionFalse.PNG)
 
 Comme on peut le voir, modbus ne répond pas. C'est possible que la librairie ne soit plus a jour.
@@ -196,7 +198,7 @@ def check_green_energy():
 ```
 
 Ici nous voulons faire en sorte que le script va utiliser la commande accessible par le système pour aller intéroger l'onduleur.
-Je supose qu'il manque du code. On peut voir que ici que la production entiere solaire. Hors chez nous, il y a la maison qui est aussi connecté a l'installation PV. En gros, le on ne prend pas en compte qu'il y a eventuellement le chauffage en marche et on va donc overshoot. Mais, il faut tester et on verra bien.
+Je supose qu'il manque du code. On peut voir que ici que la production entiere solaire. Hors, chez nous, il y a la maison qui est aussi connecté a l'installation PV. En gros, la, on ne prend pas en compte qu'il y a eventuellement le chauffage en marche et on va donc overshoot. Mais, il faut tester et on verra bien.
 
 Déjà, il nous faut pas faire de regex ou autre mais un try catch. Si par exemple l'onduleur ne répond pas, il y aura une value error car on ne recois pas un int.
 
@@ -204,7 +206,7 @@ Déjà, il nous faut pas faire de regex ou autre mais un try catch. Si par exemp
 solarW = int(subprocess.check_output(['solaredge','-grid']).decode("utf-8")[0:-1])
 ```
 
-En testant, les log me dissent qu'il y a 45 Ampere a disposition alors qu'on produit seulment 6Kw. ça m'as l'air assez faut (beacoup trop) mais il faudrait tester. Malheuresement, mon père a pris la tesla donc je devrais tester ce weekend.
+En testant, les log me dissent qu'il y a 45 Ampere a disposition alors qu'on produit seulment 6Kw. ça m'as l'air faut (beacoup trop) mais il faudrait tester. Malheuresement, mon père a pris la tesla donc je devrais tester ce weekend.
 
 ## Resultat des tests
 
@@ -214,7 +216,7 @@ Le problème d'offset est belle est bien présent. Le code ne prend pas en compt
   1. Aller lire la consomation de la tesla sur un shelly a traver le réssau (c'est un capteur de courant)
   2. Trouver une équation qui transforme des ampere en KW (Il faut l'information des ampere tiré par la tesla)
 
-Je vais prend la solution 2 si possible. Car les shelly peuvent avoir des problèeme et ça va rajouter un composant qui peut sauter et mettre le système hors service.
+Je vais essayer la solution 2 si possible. Car les shelly peuvent avoir des problèeme et ça va rajouter un composant qui peut sauter et mettre le système hors service.
 
 Il me semble aussi que la convertion qui ce trouve dans le code si dessus est fausse car c'est des valeurs américaine alors que chez nous on a un a des autres valeur donc le Watt/240v = ampere est faut et je doit trouver la bonne constante pour la convertion.
 
@@ -244,7 +246,7 @@ En réfléchissant de ou sort ces 690V c'est trés clair en faite. La tesla est 
 
 Il me manque un moyen pour trouver le courant tiré par la tesla mais je sais que cette valeur est accessible dans le code car le frontend l'affiche.
 
-Il y a une focntion qui le fait 
+Il y a une focntion qui le fait :
 
 ```py
 total_amps_actual_all_twcs()
@@ -295,7 +297,7 @@ Pour le frontend, j'ai déssiné une maquette rapidement et j'ai fait une page H
 
 Donc il faut faire une espece de API qui pourra être utilisé pour faire du polling anisi que de mettre le mode boost ou eco.
 
-Pour le changement de mode, je vais aller mettre un echo de debug dans la fonction qui est appelé et je pourrais alors voir qu'elle commande mettent le boost et les quelle mettent en mode eco.
+Pour le changement de mode, je vais aller mettre un echo de debug dans la fonction qui est appelé et je pourrais alors voir quelle commande mettent le boost et les quelle mettent en mode eco.
 
 Voila pour le mode boost:
 
@@ -400,13 +402,17 @@ Voilà le frontend fini:
 
 Les valeur current available anisi que le pulling sont misses a jour toutes les 2 secondes.
 
+# Resultat
+
+![alt](resultat.jpg)
+
 
 # Installation
 
-J'ai écrit le guide d'installation dans le fichier README.md du repo git a fin que d'autre personne puissent reprendre mon travail s'il le souhaite.
+J'ai écrit le guide d'installation dans le fichier README.md en anglais du repo git a fin que d'autre personne puissent reprendre mon travail s'il le souhaite.
 
 J'ai rencontré beacoup de problème pour le faire au propre.
-Premierement, quand l'os démarre, on peut ajouter des commandes dans le /etc/rc.local. Mais ce fichier est executé en tant que root. Ce qui fait que pleine de chose marchais si je lancais les commandes a la main mais quand je rebootais, les screens n'etais pas lancés, les logfile pas existant ou au mauvais entroid etc.
+Premierement, quand l'os démarre, on peut ajouter des commandes dans le /etc/rc.local. Mais ce fichier est executé en tant que root. Ce qui fait que tout marchais si je lancais les commandes a la main mais quand je rebootais, les screens n'etais pas lancés, les logfile pas existant ou au mauvais entroid etc.
 
 Pour palier a ce problème il faut utiliser:
 
@@ -422,3 +428,19 @@ cd /home/pi/TWCManager/TWC
 su pi -c "screen -m -d -L -Logfile TWCManager.log -S TWCManager python3 /home/pi/TWCManager/TWC/TWCManager.py"
 cd -
 ```
+
+# Conclusion
+
+On a un projet qui tourne sur un raspberry connecté par rs485 a une borne tesla. Sur le raspberry tourne un script python qui va être le master du systène et controller la borne. En même temps, le script va périodiquement lancer un autre script qui va retrouner la production solaire. Avec la productin solaire, le script calcule le "overhead" de la producion et va informer la borne tesla du courant qu'elle peut tirer.
+
+En parralèlle, une page web est mise a disposition pour afficher les informations du système. Cette page a aussi un boutton qui permet de override le courrant a disposition et le mettre au max (16ampere).
+
+Le système est résistant au coupure de réssau, au coupure de l'alimentation (reboot) et consome pas plus de 5 watts.
+
+Les problèmes rencontrés sont:
+ * Droit d'accées au fichiers
+ * Execution par root au lieu de pi
+ * Manque de logfiles pour le debug
+
+Le projet rempli le cahier des charges du projet en plus d'être mis a disposition sur github avec guide d'installation.
+
